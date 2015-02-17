@@ -98,10 +98,14 @@ def ranking_of_talks(talks, missing_vote=5):
     talks_map = dict((t.id, t) for t in talks)
     in_ = _input_for_ranking_of_talks(talks_map.values(), missing_vote=missing_vote)
 
+    env = {
+        'PATH': os.environ['PATH']
+    }
     pipe = subprocess.Popen(
         [vengine],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        close_fds=True
+        close_fds=True,
+        env=env
     )
     out, err = pipe.communicate(in_)
     if pipe.returncode != 0:

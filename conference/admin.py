@@ -601,7 +601,7 @@ class TalkAdmin(admin.ModelAdmin):
         writer = csv.writer(buff)
         for t in queryset:
             for s in t.get_all_speakers():
-                name = '{} {}'.format(s.user.first_name, s.user.last_name)
+                name = u'{} {}'.format(s.user.first_name, s.user.last_name)
                 writer.writerow((t.status, t.title.encode('utf-8'), name.encode('utf-8'), s.user.email.encode('utf-8')))
         response = http.HttpResponse(buff.getvalue(), mimetype="text/csv")
         response['Content-Disposition'] = 'attachment; filename=speakers.csv'

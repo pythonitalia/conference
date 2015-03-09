@@ -39,11 +39,6 @@ parser.add_option("-n", "--per-page",
                     action="store",
                     type="int",
                     help="badge per page")
-parser.add_option("-m", "--no-marker",
-                    dest="no_marker",
-                    default=False,
-                    action="store_true",
-                    help="don't draw the crop marks")
 parser.add_option("-c", "--conf",
                     dest="conf",
                     default="conf.py",
@@ -54,6 +49,11 @@ parser.add_option("-e", "--empty-pages",
                     default="0",
                     action="store",
                     help="prepare x empty pages")
+parser.add_option("--center",
+                    dest="align_center",
+                    default=False,
+                    action="store_true",
+                    help="align badges horizontally")
 
 opts, args = parser.parse_args()
 
@@ -127,55 +127,40 @@ def draw_info(image, max_width, text, pos, font, color, line_offset=8):
         d.text((cx, cy), l, font = font, fill = color)
         cy += font.getsize(l)[1] + line_offset
 
-def assemble_page(images):
-    #cols = rows = int(math.ceil(math.sqrt(len(images))))
-    #w0, h0 = images[0].size
-    #x0 = (PAGE_SIZE[0] - w0 * cols) / 2
-    #y0 = (PAGE_SIZE[1] - h0 * rows) / 2
-
+def assemble_page(images, align='left'):
     page = Image.new('RGBA', PAGE_SIZE, (255, 255, 255, 255))
-    x = y = PAGE_MARGIN
-    limits = PAGE_SIZE[0] - 2*PAGE_MARGIN, PAGE_SIZE[1] - 2*PAGE_MARGIN
+    limits = (
+        PAGE_SIZE[0] - 2*PAGE_MARGIN,
+        PAGE_SIZE[1] - 2*PAGE_MARGIN)
+
+    x = y = 0
+    rows = [[]]
     for img in images:
         size = img.size
         if x + size[0] > limits[0]:
-            x = PAGE_MARGIN
+            x = 0
             y += size[1]
-        elif y + size[1] > limits[1]:
-            y += size[1]
-        page.paste(img, (x, y), img)
+            rows.append([])
+        #elif y + size[1] > limits[1]:
+        #    y += size[1]
+        #    rows.append([])
+        rows[-1].append((img, (x, y)))
         x += size[0]
-    return page
 
-#    TODO: reimplementare la gestione dei segni di taglio
-#    if not opts.no_marker and WASTE:
-#        draw = ImageDraw.Draw(page)
-#        a = WASTE
-#        line_width = int(0.5 * MM2INCH * DPI)
-#        def m(p0, p1):
-#            p0 = tuple(map(int, p0))
-#            p1 = tuple(map(int, p1))
-#            draw.line((p0, p1), fill = (0, 0, 0), width = line_width)
-#        for ix, i in enumerate(images):
-#            col = ix % cols
-#            row = ix / rows
-#            x1 = x0 + col * w0
-#            y1 = y0 + row * h0
-#            x2 = x1 + w0
-#            y2 = y1 + h0
-#
-#            m((x1+a, y1), (x1+a, y1+a/2))
-#            m((x1, y1+a), (x1+a/2, y1+a))
-#
-#            m((x2-a, y1), (x2-a, y1+a/2))
-#            m((x2, y1+a), (x2-a/2, y1+a))
-#
-#            m((x2, y2-a), (x2-a/2, y2-a))
-#            m((x2-a, y2), (x2-a, y2-a/2))
-#
-#            m((x1, y2-a), (x1+a/2, y2-a))
-#            m((x1+a, y2), (x1+a, y2-a/2))
-#    return page
+    for row in rows:
+        if align == 'center':
+            align_offset = 1
+            row_width = sum([ ])
+            for img, pos in row:
+                row_width += img.size[0]
+            align_offset = (PAGE_SIZE[0] - row_width) / 2, PAGE_MARGIN
+        else:
+            align_offset = PAGE_MARGIN, PAGE_MARGIN
+        for img, pos in row:
+            x, y = pos
+            align_x, align_y = align_offset
+            page.paste(img, (x + align_x, y + align_y), img)
+    return page
 
 def add_page(name, page):
     with file(os.path.join(output_dir, name), 'w') as out:
@@ -187,6 +172,8 @@ def render_badge(image, attendee, utils, resize_factor=None):
         nsize = i.size[0] * resize_factor, i.size[1] * resize_factor
         i = i.resize(nsize, Image.ANTIALIAS)
     return i
+
+badge_align = 'left' if not opts.align_center else 'center'
 
 for group_type, data in sorted(groups.items()):
     image = data['image']
@@ -206,7 +193,7 @@ for group_type, data in sorted(groups.items()):
             for a in block:
                 badge = render_badge(image, a, utils=utils, resize_factor=opts.resize)
                 images.append(badge)
-            page = assemble_page(images)
+            page = assemble_page(images, badge_align)
 
             name = '[%s] pag %s-%s.tif' % (group_type, str(count).zfill(2), str(pages).zfill(2))
             print >>sys.stderr, name
@@ -221,4 +208,4 @@ for group_type, data in sorted(groups.items()):
     for ix in range(additional):
         name = '[%s][vuoti] pag %s-%s.tif' % (group_type, str(ix+1).zfill(2), str(additional).zfill(2))
         images = [ render_badge(image, None, utils=utils, resize_factor=opts.resize) for x in range(opts.per_page) ]
-        add_page(name, assemble_page(images))
+        add_page(name, assemble_page(images, badge_align))

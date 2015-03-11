@@ -54,6 +54,11 @@ parser.add_option("--center",
                     default=False,
                     action="store_true",
                     help="align badges horizontally")
+parser.add_option("--x-mirror",
+                    dest="mirror_x",
+                    default=False,
+                    action="store_true",
+                    help="reorder badge along the x axis")
 
 opts, args = parser.parse_args()
 
@@ -127,7 +132,7 @@ def draw_info(image, max_width, text, pos, font, color, line_offset=8):
         d.text((cx, cy), l, font = font, fill = color)
         cy += font.getsize(l)[1] + line_offset
 
-def assemble_page(images, align='left'):
+def assemble_page(images, align='left', mirror_x=False):
     page = Image.new('RGBA', PAGE_SIZE, (255, 255, 255, 255))
     limits = (
         PAGE_SIZE[0] - 2*PAGE_MARGIN,
@@ -156,6 +161,13 @@ def assemble_page(images, align='left'):
             align_offset = (PAGE_SIZE[0] - row_width) / 2, PAGE_MARGIN
         else:
             align_offset = PAGE_MARGIN, PAGE_MARGIN
+        if mirror_x:
+            original = row
+            mirrored = row[::-1]
+            for ix, el in enumerate(zip(original, mirrored)):
+                img = el[0][0]
+                mirrored_pos = el[1][1]
+                row[ix] = (img, mirrored_pos)
         for img, pos in row:
             x, y = pos
             align_x, align_y = align_offset
@@ -174,6 +186,7 @@ def render_badge(image, attendee, utils, resize_factor=None):
     return i
 
 badge_align = 'left' if not opts.align_center else 'center'
+badge_x_mirror = opts.mirror_x
 
 for group_type, data in sorted(groups.items()):
     image = data['image']
@@ -193,7 +206,7 @@ for group_type, data in sorted(groups.items()):
             for a in block:
                 badge = render_badge(image, a, utils=utils, resize_factor=opts.resize)
                 images.append(badge)
-            page = assemble_page(images, badge_align)
+            page = assemble_page(images, badge_align, badge_x_mirror)
 
             name = '[%s] pag %s-%s.tif' % (group_type, str(count).zfill(2), str(pages).zfill(2))
             print >>sys.stderr, name

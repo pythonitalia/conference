@@ -708,8 +708,8 @@ def render_event_video_cover(eid, thumb=(256, 256)):
         return False
     image.save(os.path.join(base, fname + '.jpg'), 'JPEG')
 
-    image = settings.VIDEO_COVER_IMAGE(eid, thumb=thumb)
-    image.save(os.path.join(base, fname + '.jpg.thumb'), 'JPEG')
+    # image = settings.VIDEO_COVER_IMAGE(eid, thumb=thumb)
+    # image.save(os.path.join(base, fname + '.jpg.thumb'), 'JPEG')
 
     return True
 

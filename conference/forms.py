@@ -184,7 +184,7 @@ class SubmissionForm(forms.Form):
         if profile:
             data.update({
                 'phone': profile.phone,
-                'birthday': profile.birthday.strftime('%Y-%m-%d'),
+                'birthday': profile.birthday.strftime('%Y-%m-%d') if profile.birthday else None,
                 'job_title': profile.job_title,
                 'company': profile.company,
                 'company_homepage': profile.company_homepage,

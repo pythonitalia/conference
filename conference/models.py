@@ -114,13 +114,13 @@ class Conference(models.Model):
     def clean(self):
         if self.conference_start and self.conference_end:
             if self.conference_start > self.conference_end:
-                raise exceptions.ValidationError('range di date per la conferenza non valido') 
+                raise exceptions.ValidationError('range di date per la conferenza non valido')
         if self.cfp_start and self.cfp_end:
             if self.cfp_start > self.cfp_end:
-                raise exceptions.ValidationError('range di date per il cfp non valido') 
+                raise exceptions.ValidationError('range di date per il cfp non valido')
         if self.voting_start and self.voting_end:
             if self.voting_start > self.voting_end:
-                raise exceptions.ValidationError('range di date per la votazione non valido') 
+                raise exceptions.ValidationError('range di date per la votazione non valido')
 
     def cfp(self):
         today = datetime.date.today()
@@ -810,6 +810,31 @@ class MediaPartnerConference(models.Model):
     class Meta:
         ordering = ['conference']
 
+class Startup(models.Model):
+    name = models.CharField(max_length=100, help_text='nome della startup')
+    slug = models.SlugField()
+    url = models.URLField(blank=True)
+    logo = models.ImageField(
+        upload_to=_fs_upload_to('startup'), blank = True,
+        help_text='Inserire un immagine raster sufficientemente grande da poter essere scalata al bisogno'
+    )
+
+    class Meta:
+        ordering = ['name']
+
+    def __unicode__(self):
+        return self.name
+
+post_save.connect(postSaveResizeImageHandler, sender=Startup)
+
+class StartupConference(models.Model):
+    startup = models.ForeignKey(Startup)
+    conference = models.CharField(max_length = 20)
+    tags = TagField()
+
+    class Meta:
+        ordering = ['conference']
+
 class ScheduleManager(models.Manager):
     def attendees(self, conference, forecast=False):
         """
@@ -1070,7 +1095,7 @@ class Event(models.Model):
         ritorna la prima istanza di track tra quelle specificate o None se l'evento
         è di tipo speciale
         """
-        # XXX: utilizzare il template tag get_event_track che cacha la query 
+        # XXX: utilizzare il template tag get_event_track che cacha la query
         dbtracks = dict( (t.track, t) for t in self.schedule.track_set.all())
         for t in tagging.models.Tag.objects.get_for_object(self):
             if t.name in dbtracks:

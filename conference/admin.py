@@ -499,7 +499,7 @@ class SpeakerAdmin(admin.ModelAdmin):
         except models.AttendeeProfile.DoesNotExist:
             img = None
         if not img:
-            return '<div style="height: 32px; width: 32px"> </div>' 
+            return '<div style="height: 32px; width: 32px"> </div>'
         return '<img src="%s" height="32" />' % (img.url,)
     _avatar.allow_tags = True
 
@@ -643,6 +643,23 @@ class MediaPartnerAdmin(admin.ModelAdmin):
         return ', '.join(s.conference for s in obj.mediapartnerconference_set.all())
 
 admin.site.register(models.MediaPartner, MediaPartnerAdmin)
+
+class StartupConferenceInlineAdmin(admin.TabularInline):
+    model = models.StartupConference
+    extra = 1
+
+class StartupAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("name",)}
+    list_display = ('name', 'url', 'conferences')
+    inlines = [ StartupConferenceInlineAdmin ]
+
+    def conferences(self, obj):
+        """
+        Elenca le conferenze a cui la startup ha partecipato
+        """
+        return ', '.join(s.conference for s in obj.startupconference_set.all())
+
+admin.site.register(models.Startup, StartupAdmin)
 
 class TrackInlineAdmin(admin.TabularInline):
     model = models.Track
@@ -977,7 +994,7 @@ admin.site.register(models.Quote, QuoteAdmin)
 
 class SpecialPlaceAdmin(admin.ModelAdmin):
     list_display = ('name', 'address', 'email')
-    
+
 admin.site.register(models.SpecialPlace, SpecialPlaceAdmin)
 
 class FareAdmin(admin.ModelAdmin):

@@ -14,6 +14,7 @@ from django.db import transaction
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_save
 from django.template.defaultfilters import slugify
+from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
 from django_urls import UrlMixin
@@ -95,11 +96,18 @@ class Conference(models.Model):
     conference_end = models.DateField(null=True, blank=True)
     voting_start = models.DateField(null=True, blank=True)
     voting_end = models.DateField(null=True, blank=True)
+    refund_start = models.DateField(null=True, blank=True)
+    refund_end = models.DateField(null=True, blank=True)
 
     objects = ConferenceManager()
 
     def __unicode__(self):
         return self.code
+
+    def refund_available(self):
+        if not self.refund_start or not self.refund_end:
+            return False
+        return self.refund_start <= now().date() < self.refund_end
 
     def days(self):
         output = []

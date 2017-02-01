@@ -128,11 +128,11 @@ def voting_results():
         else:
             results = []
             for line in f:
-                pieces = line.split('-', 4)
-                if len(pieces) != 5:
+                pieces = line.split('-', 5)
+                if len(pieces) != 6:
                     continue
                 type = pieces[2].strip()
-                language = pieces[3].strip()
+                language = pieces[4].strip()
                 tid = int(pieces[1].strip())
                 results.append((tid, type, language))
             return results

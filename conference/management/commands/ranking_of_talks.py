@@ -40,4 +40,5 @@ class Command(BaseCommand):
             users = qs.distinct().count()
             print '%d talks / %d users / %d votes' % (talks.count(), users, votes)
             for ix, t in enumerate(utils.ranking_of_talks(talks, missing_vote=options['missing_vote'])):
-                print ix+1, '-', t.id, '-', t.get_type_display(), '-', t.p3_talk.get_sub_community_display(), '-', t.language, '-', t.title.encode('utf-8'), '-', ', '.join([unicode(s) for s in t.speakers.all()])
+                spks = u', '.join([unicode(s) for s in t.speakers.all()])
+                print ix+1, '-', t.id, '-', t.get_type_display(), '-', t.p3_talk.get_sub_community_display(), '-', t.language, '-', t.title.encode('utf-8'), '-', spks.encode('utf-8')

@@ -801,6 +801,10 @@ class MediaPartner(models.Model):
         upload_to=_fs_upload_to('media-partner'), blank = True,
         help_text='Inserire un immagine raster sufficientemente grande da poter essere scalata al bisogno'
     )
+    svg = models.TextField(
+        help_text='Use this to provide a scalable image to be shown on the frontend',
+        blank=True,
+    )
 
     class Meta:
         ordering = ['partner']
